@@ -1,136 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>Form validation with messages on top: Code example - Accessibility Developer Guide example</title>
-        <meta charset="utf-8">
-        <style>.control, fieldset {
-      margin: 6px 0;
+<head>
+  <meta charset="utf-8">
+  <title>Accessible Feedback Form with Error Messages</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      line-height: 1.5;
     }
-    
+
+    .control,
+    fieldset {
+      margin: 10px 0;
+    }
+
     label {
       display: inline-block;
-      width: 120px;
+      width: 130px;
       vertical-align: top;
     }
-    
-    input + label {
-      width: auto;
+
+    input,
+    textarea {
+      width: 250px;
     }
-    
+
     .error, .required {
       color: red;
     }
-    
-    fieldset ul {
-      margin: 0;
-    }</style>
-    </head>
-    <body>
-        <h1>Feedback form</h1>
-    <form>
-        <div class="control">
-          <label>Full name <span class="required">*</span></label><input id="name" name="name" type="text" />
-        </div>
-        <div class="control">
-          <label>Biography</label><textarea id="biography" name="biography" type="text"></textarea>
-          <span>Include examples on your skills in JavaScript.</span>
-        </div>
-        
-          <div>Gender</div>
-          <div class="control">
-            <input id="gender_male" name="gender" type="radio" value="male" /><label>Male</label>
-          </div>
-          <div class="control">
-            <input id="gender_female" name="gender" type="radio" value="female" /><label>Female</label>
-          </div>
-        
-        <div class="control">
-          <input id="accept_agbs" name="accept_agbs" type="checkbox" value="1" /><label>I accept the terms and conditions</label>
-        </div>
-        <div class="control">
-          <input name="validate" type="hidden" value="1" /><input type="submit" value="Register" />
-        </div>
-      </form>
-      
-          <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-          <script>"use strict";
-      
-      ;
-      (function () {
-        var validateInput;
-      
-        $.urlParam = function (name) {
-          var results;
-          results = new RegExp('[?&]' + name + '=([^&#]*)').exec(window.location.href);
-      
-          if (results === null) {
-            return null;
-          } else {
-            return decodeURI(results[1]) || null;
-          }
-        };
-      
-        validateInput = function validateInput(input, message) {
-          var $elementToDescribe, $error, $errorContainer, $fieldset, $input, $referencedElement, value;
-          $input = $('[name="' + input + '"]');
-      
-          if ((value = $.urlParam(input)) === null) {
-            if ($('fieldset.errors').length === 0) {
-              $('form').prepend('<fieldset class="errors"><legend>Errors</legend><ul></ul></fieldset>');
-            }
-      
-            $referencedElement = null;
-            $elementToDescribe = null;
-            $errorContainer = $('fieldset.errors ul');
-      
-            if ($input.is(':radio')) {
-              $fieldset = $input.closest('fieldset');
-              $elementToDescribe = $fieldset;
-              $referencedElement = $input.filter(':first');
-            } else {
-              $elementToDescribe = $input;
-              $referencedElement = $input;
-            }
-      // R.G. hint: fix next line ;)
-            $error = $('<a>' + message + '</a>');
-            $error.click(function (e) {
-              // If we rely on the link's href pointing to the input's ID, it doesn't trigger forms mode in screen readers
-              $referencedElement.focus();
-              return e.preventDefault();
-            });
-            $elementToDescribe.attr('aria-describedby', input + '_description');
-            $errorContainer.append('<li>').find('li:last').append($error);
-      
-            if ($(':not(form):focus').length === 0) {
-              // See https://stackoverflow.com/questions/46134247/jquery-setting-focus-doesnt-work-in-ie11/
-            
-            }
-          } else {
-            if ($input.is(':checkbox')) {
-              $input.attr('checked', true);
-            }
-      
-            if ($input.is(':radio')) {
-              return $input.filter('[value="' + value + '"]').attr('checked', true);
-            } else {
-              return $input.val(value);
-            }
-          }
-        };
-      
-        $(document).ready(function () {
-          if ($.urlParam('validate')) {
-            validateInput('name', 'Please enter your name!');
-            validateInput('biography', 'Please tell us something about your history!');
-            validateInput('gender', 'Please tell us your gender!');
-            validateInput('accept_agbs', 'You must accept our terms and conditions!');
-      
-            if ($('.error').length === 0) {
-              return alert('All inputs are valid.');
-            }
-          }
-        });
-      }).call(void 0);</script>
-                
-        </body>
-      </html>
+
+    /* Added this block to style the top error summary */
+    fieldset.errors {
+      border: 2px solid red;
+      background: #ffe5e5;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+
+    fieldset.errors legend {
+      font-weight: bold;
+      color: red;
+    }
+
+    fieldset.errors a {
+      color: red;
+      text-decoration: underline;
+    }
+
+    fieldset.errors a:focus {
+      outline: 2px solid #000;
+      background: #fff;
+    }
+
+    /* Focus outline so keyboard users can see where they are */
+    input:focus-visible,
+    textarea:focus-visible,
+    button:focus-visible {
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Feedback Form</h1>
+
+  <!-- Added aria-describedby so screen readers can hear the instructions -->
+  <form aria-describedby="form-instructions">
+    <p id="form-instructions">All fields marked with <span class="required">*</span> are required.</p>
+
+    <!-- Added 'for' and aria-required to connect label properly -->
+    <div class="control">
+      <label for="name">Full name <span class="required">*</span></label>
+      <input id="name" name="name" type="text" aria-required="true" />
+    </div>
+
+    <div class="control">
+      <!-- Added * here because Biography is also mandatory -->
+      <label for="biography">Biography <span class="required">*</span></label> <!-- Added the * to show it's mandatory -->
+      <textarea id="biography" name="biography" aria-required="true" aria-describedby="bio-hint"></textarea>
+      <div id="bio-hint">Include examples of your JavaScript skills.</div>
+    </div>
+
+    <!-- Grouped gender radios inside a fieldset for accessibility -->
+    <fieldset>
+      <legend>Gender <span class="required">*</span></legend>
+
+      <!-- Added 'for' for both radio buttons -->
+      <div class="control">
+        <input id="gender_male" name="gender" type="radio" value="male" />
+        <label for="gender_male">Male</label>
+      </div>
+
+      <div class="control">
+        <input id="gender_female" name="gender" type="radio" value="female" />
+        <label for="gender_female">Female</label>
+      </div>
+    </fieldset>
+
+    <!-- Added 'for' and * for checkbox -->
+    <div class="control">
+      <input id="accept_agbs" name="accept_agbs" type="checkbox" value="1" />
+      <label for="accept_agbs">I accept the terms and conditions <span class="required">*</span></label>
+    </div>
+
+    <div class="control">
+      <input name="validate" type="hidden" value="1" />
+      <input type="submit" value="Register" />
+    </div>
+  </form>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+  <script>
+    "use strict";
+
+    (function () {
+      // I slightly rewrote the validation logic to be cleaner and screen-reader friendly
+      function validateInput(input, message) {
+        let $input = $('[name="' + input + '"]');
+        let $errorContainer = $('fieldset.errors ul');
+
+        // Creates an error summary at the top if it doesn't exist
+        if (!$errorContainer.length) {
+          $('form').prepend('<fieldset class="errors" role="alert" aria-live="assertive" tabindex="-1"><legend>Errors</legend><ul></ul></fieldset>');
+          $errorContainer = $('fieldset.errors ul');
+        }
+
+        // Checks if input is empty, unchecked, or unselected
+        if (
+          ($input.is(':text, textarea') && !$input.val().trim()) ||
+          ($input.is(':checkbox') && !$input.is(':checked')) ||
+          ($input.is(':radio') && !$('input[name="' + input + '"]:checked').length)
+        ) {
+          // Adds a clickable link that moves focus to the field
+          let $error = $('<a href="#' + input + '">' + message + '</a>');
+          $error.on('click', function (e) {
+            $('#' + input).focus();
+            e.preventDefault();
+          });
+          $errorContainer.append('<li>').find('li:last').append($error);
+
+          // Added aria-invalid to help assistive tech users
+          $input.attr('aria-invalid', 'true');
+        } else {
+          $input.removeAttr('aria-invalid');
+        }
+      }
+
+      // Runs all validation checks on form submit
+      $('form').on('submit', function (e) {
+        e.preventDefault();
+        $('fieldset.errors').remove();
+
+        // All required fields validated here
+        validateInput('name', 'Please enter your full name.');
+        validateInput('biography', 'Please tell us a bit about your background.'); // biography kept as mandatory
+        validateInput('gender', 'Please select your gender.');
+        validateInput('accept_agbs', 'You must accept the terms and conditions.');
+
+        // Focuses on the first error summary when there are errors
+        if ($('fieldset.errors li').length) {
+          $('fieldset.errors').focus();
+        } else {
+          alert('Form submitted successfully! All inputs are valid.');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
